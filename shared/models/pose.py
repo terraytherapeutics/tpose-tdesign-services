@@ -19,6 +19,7 @@ class Pose:
         structure_cif: CIF file path or content (Option 1)
         protein_pdb: Protein PDB file path or content (Option 2)
         ligand_sdf: Ligand SDF file path or content (Option 2)
+        structure_path: S3 path where optimized complex structure will be written
         energy_method: Force field method ("gfn2" or "so3lr")
         metadata: Optional user metadata
     """
@@ -27,6 +28,7 @@ class Pose:
     structure_cif: Optional[str] = None
     protein_pdb: Optional[str] = None
     ligand_sdf: Optional[str] = None
+    structure_path: Optional[str] = None  # S3 path where optimized complex will be written
     energy_method: Optional[str] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
 
@@ -104,6 +106,7 @@ class Pose:
             structure_cif=data.get('structure_cif'),
             protein_pdb=data.get('protein_pdb'),
             ligand_sdf=data.get('ligand_sdf'),
+            structure_path=data.get('structure_path'),
             energy_method=data.get('energy_method'),
             metadata=data.get('metadata', {})
         )
@@ -120,6 +123,7 @@ class Pose:
             'structure_cif': self.structure_cif,
             'protein_pdb': self.protein_pdb,
             'ligand_sdf': self.ligand_sdf,
+            'structure_path': self.structure_path,
             'energy_method': self.energy_method,
             'metadata': self.metadata
         }

@@ -121,7 +121,7 @@ class RankingRunner:
         return path
 
     def _upload_results_to_s3(self, result: RankingResult, bucket: str,
-                             output_folder: str) -> RankingResult:
+                             output_folder: str, structure_path: Optional[str] = None) -> RankingResult:
         """
         Upload result files to S3 and update paths.
 
@@ -129,6 +129,7 @@ class RankingRunner:
             result: RankingResult with local file paths
             bucket: S3 bucket name
             output_folder: S3 output folder
+            structure_path: Optional custom S3 path for optimized complex structure
 
         Returns:
             Updated RankingResult with S3 paths
@@ -137,10 +138,25 @@ class RankingRunner:
 
         # Upload optimized complex PDB
         if result.optimized_complex_pdb and os.path.exists(result.optimized_complex_pdb):
-            s3_key = f"{output_folder}/{pose_id}_complex_opt.pdb"
-            if self.s3_client.upload_pdb_file(result.optimized_complex_pdb, bucket, s3_key):
-                result.optimized_complex_pdb = f"s3://{bucket}/{s3_key}"
-                logger.info(f"[{pose_id}] Uploaded complex PDB to S3")
+            # Use custom structure_path if provided, otherwise use default
+            if structure_path:
+                # Parse bucket and key from s3:// path if needed
+                if structure_path.startswith('s3://'):
+                    # Extract bucket and key from s3://bucket/key format
+                    path_parts = structure_path[5:].split('/', 1)
+                    target_bucket = path_parts[0] if len(path_parts) > 0 else bucket
+                    s3_key = path_parts[1] if len(path_parts) > 1 else f"{output_folder}/{pose_id}_complex_opt.pdb"
+                else:
+                    # Assume it's just a key
+                    target_bucket = bucket
+                    s3_key = structure_path
+            else:
+                target_bucket = bucket
+                s3_key = f"{output_folder}/{pose_id}_complex_opt.pdb"
+
+            if self.s3_client.upload_pdb_file(result.optimized_complex_pdb, target_bucket, s3_key):
+                result.optimized_complex_pdb = f"s3://{target_bucket}/{s3_key}"
+                logger.info(f"[{pose_id}] Uploaded complex PDB to {result.optimized_complex_pdb}")
 
         # Upload split protein PDB
         if result.split_protein_pdb and os.path.exists(result.split_protein_pdb):
@@ -252,7 +268,7 @@ class RankingRunner:
 
             # Upload results to S3 if successful
             if result.ranking_success:
-                result = self._upload_results_to_s3(result, bucket, output_folder)
+                result = self._upload_results_to_s3(result, bucket, output_folder, pose.structure_path)
 
             # Log summary
             elapsed = time.time() - start_time

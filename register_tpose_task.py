@@ -56,6 +56,9 @@ Input formats:
 - Option 1: CIF file (e.g., from Boltz predictions) - automatically converted to PDB+SDF
 - Option 2: Direct PDB (protein) + SDF (ligand) files
 
+Optional per-pose parameters:
+- structure_path: S3 path where optimized complex structure will be written (e.g., "s3://bucket/path/complex.pdb")
+
 All energies are reported in kcal/mol. Recommended maximum of 50-100 poses per run.
 
 Outputs:
@@ -219,11 +222,13 @@ def test_task_registration():
             "pose_id": "pose_001",
             "protein_pdb": "s3://terray-tpose/input/protein_001.pdb",
             "ligand_sdf": "s3://terray-tpose/input/ligand_001.sdf",
+            "structure_path": "s3://terray-tpose/output/structures/pose_001_optimized.pdb",
         },
         {
             "pose_id": "pose_002",
             "protein_pdb": "s3://terray-tpose/input/protein_002.pdb",
             "ligand_sdf": "s3://terray-tpose/input/ligand_002.sdf",
+            "structure_path": "s3://terray-tpose/output/structures/pose_002_optimized.pdb",
         },
     ]
     use_case_1_params = {
@@ -245,11 +250,13 @@ def test_task_registration():
             "pose_id": "pose_001",
             "protein_pdb": "s3://terray-tpose/input/protein_001.pdb",
             "ligand_sdf": "s3://terray-tpose/input/ligand_001.sdf",
+            "structure_path": "s3://terray-tpose/output/structures/pose_001_so3lr.pdb",
         },
         {
             "pose_id": "pose_002",
             "protein_pdb": "s3://terray-tpose/input/protein_002.pdb",
             "ligand_sdf": "s3://terray-tpose/input/ligand_002.sdf",
+            "structure_path": "s3://terray-tpose/output/structures/pose_002_so3lr.pdb",
         },
     ]
     use_case_2_params = {
@@ -274,10 +281,12 @@ def test_task_registration():
         {
             "pose_id": "boltz_pose_001",
             "structure_cif": "s3://terray-boltz/output/structure_001.cif",
+            "structure_path": "s3://terray-tpose/output/structures/boltz_001_ranked.pdb",
         },
         {
             "pose_id": "boltz_pose_002",
             "structure_cif": "s3://terray-boltz/output/structure_002.cif",
+            "structure_path": "s3://terray-tpose/output/structures/boltz_002_ranked.pdb",
         },
     ]
     use_case_3_params = {
@@ -297,11 +306,13 @@ def test_task_registration():
         {
             "pose_id": "mixed_001",
             "structure_cif": "s3://terray-tpose/input/structure_001.cif",
+            "structure_path": "s3://terray-tpose/output/structures/mixed_001.pdb",
         },
         {
             "pose_id": "mixed_002",
             "protein_pdb": "s3://terray-tpose/input/protein_002.pdb",
             "ligand_sdf": "s3://terray-tpose/input/ligand_002.sdf",
+            "structure_path": "s3://terray-tpose/output/structures/mixed_002.pdb",
         },
     ]
     use_case_4_params = {
