@@ -152,14 +152,19 @@ class XTBForceField(BaseForceField):
                 method="gfnff"
             )
 
-            # Move optimized structure
+            # Move optimized structure (xTB creates it in same dir as input)
             complex_opt = os.path.join(work_dir, "complex_opt.pdb")
-            if os.path.exists("xtbopt.pdb"):
-                subprocess.run(f"mv xtbopt.pdb {complex_opt}", shell=True, check=True)
+            xtbopt_path = os.path.join(work_dir, "xtbopt.pdb")
+            if os.path.exists(xtbopt_path):
+                subprocess.run(f"mv {xtbopt_path} {complex_opt}", shell=True, check=True)
             else:
-                raise FileNotFoundError("xtbopt.pdb not found after optimization")
+                raise FileNotFoundError(f"xtbopt.pdb not found after optimization at {xtbopt_path}")
 
+            # Clean up xTB files from work directory
+            cwd_before = os.getcwd()
+            os.chdir(work_dir)
             clean_up_tmp_xtb_files()
+            os.chdir(cwd_before)
             logger.info(f"[{pose_id}] Complex optimized: {complex_opt}")
 
             # Step 5: Calculate E(complex) with GFN2
@@ -167,7 +172,10 @@ class XTBForceField(BaseForceField):
             complex_energy = run_xtb_spe(complex_opt, method="gfn 2")
             if complex_energy is None:
                 raise ValueError("Failed to calculate complex energy")
+            cwd_before = os.getcwd()
+            os.chdir(work_dir)
             clean_up_tmp_xtb_files()
+            os.chdir(cwd_before)
 
             # Step 6: Split complex into protein and ligand
             split_pdb(complex_opt, ligand_resname=self.ligand_resname, run_dir=work_dir)
@@ -180,14 +188,20 @@ class XTBForceField(BaseForceField):
             prot_energy = run_xtb_spe(prot_split, method="gfn 2")
             if prot_energy is None:
                 raise ValueError("Failed to calculate protein energy")
+            cwd_before = os.getcwd()
+            os.chdir(work_dir)
             clean_up_tmp_xtb_files()
+            os.chdir(cwd_before)
 
             # Step 8: Calculate E(ligand_bound) with GFN2
             logger.info(f"[{pose_id}] Calculating ligand bound energy with GFN2...")
             lig_bound_energy = run_xtb_spe(lig_split, method="gfn 2")
             if lig_bound_energy is None:
                 raise ValueError("Failed to calculate ligand bound energy")
+            cwd_before = os.getcwd()
+            os.chdir(work_dir)
             clean_up_tmp_xtb_files()
+            os.chdir(cwd_before)
 
             # Step 9: Optimize free ligand with GFN2
             logger.info(f"[{pose_id}] Optimizing free ligand with GFN2...")
@@ -195,12 +209,17 @@ class XTBForceField(BaseForceField):
             if lig_free_energy is None:
                 raise ValueError("Failed to optimize free ligand")
 
-            # Save optimized ligand
+            # Save optimized ligand (xTB creates it in same dir as input)
             lig_opt = os.path.join(work_dir, "lig_opt.pdb")
-            if os.path.exists("xtbopt.pdb"):
-                subprocess.run(f"mv xtbopt.pdb {lig_opt}", shell=True, check=True)
+            xtbopt_lig_path = os.path.join(work_dir, "xtbopt.pdb")
+            if os.path.exists(xtbopt_lig_path):
+                subprocess.run(f"mv {xtbopt_lig_path} {lig_opt}", shell=True, check=True)
 
+            # Clean up xTB files from work directory
+            cwd_before = os.getcwd()
+            os.chdir(work_dir)
             clean_up_tmp_xtb_files()
+            os.chdir(cwd_before)
 
             # Step 10: Calculate energies in kcal/mol
             strain_energy = (lig_bound_energy - lig_free_energy) * self.HARTREE_TO_KCAL

@@ -44,8 +44,26 @@ def run_xtb_spe(input_pdb: str, method: str = "gfnff") -> Optional[float]:
         Energy in Hartree or None if failed
     """
     try:
-        xtb_command = f"xtb --{method} {input_pdb} --alpb water"
-        result = subprocess.run(xtb_command, shell=True, capture_output=True, text=True)
+        # Get directory of input file to run xTB there
+        input_dir = os.path.dirname(os.path.abspath(input_pdb))
+        input_name = os.path.basename(input_pdb)
+
+        xtb_command = f"xtb --{method} {input_name} --alpb water"
+        result = subprocess.run(
+            xtb_command,
+            shell=True,
+            capture_output=True,
+            text=True,
+            cwd=input_dir
+        )
+
+        # Check for errors
+        if result.returncode != 0:
+            logger.error(f"xTB SPE failed with return code {result.returncode}")
+            logger.error(f"stderr: {result.stderr[:500]}")
+            logger.error(f"stdout (last 500 chars): {result.stdout[-500:]}")
+            return None
+
         energy = parse_energy_from_xtb_output(result.stdout)
         return energy
     except Exception as e:
@@ -74,27 +92,46 @@ def run_xtb_opt(input_pdb: str, H_only: bool = False,
                 "Only one of H_only or prot_indices can be specified, not both."
             )
 
+        # Get directory of input file to run xTB there
+        input_dir = os.path.dirname(os.path.abspath(input_pdb))
+        input_name = os.path.basename(input_pdb)
+
         if H_only:
             inp_file = """$constrain\n   elements: 6, 7, 8, 9, 15, 16, 17, 53\n   force constant 2\n$end"""
-            with open("xtb.inp", "w") as f:
+            with open(os.path.join(input_dir, "xtb.inp"), "w") as f:
                 f.write(inp_file)
             xtb_command = (
-                f"xtb --{method} {input_pdb} --opt --input xtb.inp --alpb water"
+                f"xtb --{method} {input_name} --opt --input xtb.inp --alpb water"
             )
 
         elif prot_indices:
             prot_indices_list_str = ",".join([str(i) for i in prot_indices])
             inp_file = f"""$constrain\n   atoms: {prot_indices_list_str}\n   force constant 2\n$end"""
-            with open("xtb.inp", "w") as f:
+            with open(os.path.join(input_dir, "xtb.inp"), "w") as f:
                 f.write(inp_file)
             xtb_command = (
-                f"xtb --{method} {input_pdb} --opt --input xtb.inp --alpb water"
+                f"xtb --{method} {input_name} --opt --input xtb.inp --alpb water"
             )
 
         else:
-            xtb_command = f"xtb --{method} {input_pdb} --opt --alpb water"
+            xtb_command = f"xtb --{method} {input_name} --opt --alpb water"
 
-        result = subprocess.run(xtb_command, shell=True, capture_output=True, text=True)
+        # Run xTB in the input directory so output files are created there
+        result = subprocess.run(
+            xtb_command,
+            shell=True,
+            capture_output=True,
+            text=True,
+            cwd=input_dir
+        )
+
+        # Check for errors
+        if result.returncode != 0:
+            logger.error(f"xTB optimization failed with return code {result.returncode}")
+            logger.error(f"stderr: {result.stderr[:500]}")
+            logger.error(f"stdout (last 500 chars): {result.stdout[-500:]}")
+            return None
+
         energy = parse_energy_from_xtb_output(result.stdout)
         return energy
     except Exception as e:
