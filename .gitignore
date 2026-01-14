@@ -1,0 +1,86 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# xTB temporary files
+wbo
+charges
+xtbopt.log
+xtbopt.sdf
+xtbout.log
+xtb.out
+xtbrestart
+xtbtopo.mol
+xtbtopo.sdf
+xtbout.json
+.xtboptok
+xtblast.pdb
+xtbopt.pdb
+gfnff_adjacency
+gfnff_charges
+gfnff_topo
+gfnff_lists.json
+xtb.inp
+
+# Working directories
+*_chopped.pdb
+*_split.pdb
+complex.pdb
+complex_opt.pdb
+receptor.pdb
+ligand.pdb
+prot_split.pdb
+lig_split.pdb
+lig_opt.pdb
+
+# AWS
+.aws/
+credentials
+
+# TDesign
+.tdesign/
